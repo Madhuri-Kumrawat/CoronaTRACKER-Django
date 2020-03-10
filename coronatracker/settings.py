@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django_mysql',
     'corona.apps.CoronaConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -75,9 +76,26 @@ WSGI_APPLICATION = 'coronatracker.wsgi.application'
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    'other': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'default':{
+        'ENGINE': 'django.db.backends.mysql',
+        'HOST':'localhost',
+        'NAME':'corona',
+        'USER':'root',
+        'PASSWORD':'madhuri12',
+        'PORT': '3306',
+        'OPTIONS': {
+            # Tell MySQLdb to connect with 'utf8mb4' character set
+            'charset': 'utf8mb4',
+        },
+# Tell Django to build the test database with the 'utf8mb4' character set
+        'TEST': {
+            'CHARSET': 'utf8mb4',
+            'COLLATION': 'utf8mb4_unicode_ci',
+        }
     }
 }
 
@@ -119,3 +137,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+

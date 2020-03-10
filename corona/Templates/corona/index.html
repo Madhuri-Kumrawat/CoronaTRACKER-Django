@@ -1,0 +1,21 @@
+{% extends 'corona/base.html' %}
+
+<!DOCTYPE html>
+
+{% block body %}
+<html lang="en">
+<head>
+     <meta charset="UTF-8">
+
+</head>
+<body>
+
+   <ul>
+        <div id='myDiv' style="width:1000px;align=center">
+
+            <iframe src="{{country_wise_cases}}" height="1000" width="800"></iframe>
+        </div>
+    </ul>
+</body>
+</html>
+{% endblock %}
