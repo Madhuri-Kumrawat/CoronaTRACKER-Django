@@ -11,6 +11,10 @@
 <body>
 
    <ul>
+       {% for location in maps_data %}
+        <li>{{ location.country}}-{{ location.state}}-{{ location.total_cases}}</li>
+       {% endfor %}
+
         <div id='myDiv' style="width:1000px;align=center">
 
             <iframe src="{{country_wise_cases}}" height="1000" width="800"></iframe>
