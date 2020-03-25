@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Sum,QuerySet,Subquery,Count
+import datetime
 
 # Create your models here.
 from django.db.models.functions import TruncDate, TruncMonth, Trunc
@@ -19,6 +20,12 @@ class country_total_data(models.Model):
     Recovered=models.IntegerField(default=0)
     Deaths=models.IntegerField(default=0)
 
+class worldwide_aggregated_data(models.Model):
+    Date = models.DateField('Added Date', null=True)
+    Confirmed = models.IntegerField(default=0)
+    Recovered = models.IntegerField(default=0)
+    Deaths = models.IntegerField(default=0)
+    IncreaseRate=models.DecimalField(max_length=100,decimal_places=4,max_digits=7)
 
 class corona_data(models.Model):
     state=models.CharField(max_length=100)
@@ -35,34 +42,37 @@ class corona_data(models.Model):
 
     def total_countries_confirmed(self,country_name):
         if country_name:
-            return corona_data.objects.all().filter(country=country_name).aggregate(total_cases=Sum('confirmed'))
+            return corona_data.objects.all().filter(country=country_name,updated_at__date=datetime.date(2020, 3, 23)).aggregate(total_cases=Sum('confirmed'))
         else:
-            return corona_data.objects.all().aggregate(total_cases=Sum('confirmed'))
+            return corona_data.objects.filter(updated_at__date=datetime.date(2020, 3, 23)).all().aggregate(total_cases=Sum('confirmed'))
 
     def total_countries_deaths(self,country_name):
         if country_name:
-            return corona_data.objects.all().filter(country=country_name).aggregate(total_cases=Sum('deaths'))
+            return corona_data.objects.all().filter(country=country_name,updated_at__date=datetime.date(2020, 3, 23)).aggregate(total_cases=Sum('deaths'))
         else:
-            return corona_data.objects.all().aggregate(total_cases=Sum('deaths'))
+            return corona_data.objects.filter(updated_at__date=datetime.date(2020, 3, 23)).all().aggregate(total_cases=Sum('deaths'))
 
     def total_countries_recovery(self,country_name):
         if country_name:
-            return corona_data.objects.all().filter(country=country_name).aggregate(total_cases=Sum('recovered'))
+            return corona_data.objects.all().filter(country=country_name,updated_at__date=datetime.date(2020, 3, 23)).aggregate(total_cases=Sum('recovered'))
         else:
-            return corona_data.objects.all().aggregate(total_cases=Sum('recovered'))
+            return corona_data.objects.filter(updated_at__date=datetime.date(2020, 3, 23)).all().aggregate(total_cases=Sum('recovered'))
 
     def all_countries_confirmed(self,country_name):
-        total_Cases= corona_data.objects.values('country').annotate(total_cases=Sum('confirmed'))
+        total_Cases= corona_data.objects.filter(updated_at__date=datetime.date(2020, 3, 23)).values('country').annotate(total_cases=Sum('confirmed'))
         if country_name:
             total_Cases=total_Cases.filter(country=country_name)
         return total_Cases
 
     def map_data(self):
-        return corona_data.objects.raw('SELECT corona_corona_data.id, corona_corona_data.country,corona_corona_data.state,corona_country.lat,corona_country.lng,sum(confirmed) as total_cases '
-                                       ' FROM corona_corona_data '
-                                       ' JOIN corona_country ON corona_corona_data.country=corona_country.country AND corona_corona_data.state=corona_country.state'
-                                       ' GROUP BY corona_corona_data.country,corona_corona_data.state'                                       
-                                       ' HAVING sum(confirmed)>0')
+        #return corona_data.objects.filter(updated_at__date=datetime.date(2020, 3, 23)).select_related('country','state','lat','lng').values('country','state','lat','lng').annotate(total_cases=Sum('confirmed'))
+
+        return corona_data.objects.raw(
+            'SELECT corona_corona_data.id, corona_corona_data.country,corona_corona_data.state,lat,lng,sum(confirmed) as total_cases '
+            ' FROM corona_corona_data '
+            ' WHERE updated_at="2020-03-23" '
+            ' GROUP BY corona_corona_data.country,corona_corona_data.state,lat,lng'
+            ' HAVING sum(confirmed)>0')
 
     def monthly_data(self):
         return corona_data.objects.raw('SELECT corona_corona_data.id, sum(confirmed) as total_cases'

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'django_mysql',
     'dynamic_models',
     'corona.apps.CoronaConfig',
+    'django.contrib.humanize',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

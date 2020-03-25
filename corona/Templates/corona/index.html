@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 
 {% block body %}
+{% load humanize %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +15,7 @@
         <div class="card card-chart">
             <div class="card-header ">
                 <h5 class="card-category">Total Cases</h5>
-                <h3 class="card-title "> <span class="total_confirmed_cases">{{total_confirmed.total_cases}}</span></h3>
+                <h3 class="card-title "> <span class="total_confirmed_cases">{{total_confirmed.total_cases|intcomma }}</span></h3>
             </div>
         </div>
         <div class="card card-chart">
@@ -22,13 +23,13 @@
                 <h5 class="card-category">Global Effect</h5>
             </div>
             <div class="card-body ">
-                <div class="table-responsive">
-                    <table class="table tablesorter " id="">
+                <div class="table-responsive" style="height:500px">
+                    <table class="table tablesorter table-responsive" id="tblCountry">
                         <tbody>
                         {% for location in maps_data %}
                         <tr>
                             <td data-country="{{ location.country}}" class="country_wise_case">
-                                {{ location.country}}-{{ location.total_cases}}
+                                <a href="#">{{ location.country}}-{{ location.total_cases|intcomma }}</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -58,7 +59,7 @@
                     </div> -->
                 </div>
             </div>
-            <div id="myDiv" class="chart-area card-body" style="width:500px;align=center">
+            <div id="myDiv" class="chart-area card-body" style="width:100%;align=center">
                      {% autoescape on %}
                     {{ country_wise_cases|safe }}
                     {% endautoescape %}
@@ -72,7 +73,7 @@
 
                     <div class="card-header ">
                         <h5 class="card-category">Total Deaths</h5>
-                        <h3 class="card-title"><span class="total_death_cases">{{total_deaths.total_cases}}</span></h3>
+                        <h3 class="card-title"><span class="total_death_cases">{{total_deaths.total_cases|intcomma }}</span></h3>
                     </div>
                 </div>
             </div>
@@ -81,7 +82,7 @@
 
                     <div class="card-header ">
                         <h5 class="card-category">Total Recovery</h5>
-                        <h3 class="card-title"><span class="total_recovered_cases">{{total_recovered.total_cases}}</span> </h3>
+                        <h3 class="card-title"><span class="total_recovered_cases">{{total_recovered.total_cases|intcomma }}</span> </h3>
                     </div>
                 </div>
             </div>
@@ -94,6 +95,24 @@
                 {% autoescape on %}
                 {{ month_wise_data|safe }}
                 {% endautoescape %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="card card-chart">
+            <div class="card-header ">
+                <div class="row">
+                    <div class="col-sm-6 text-left">
+                        <h5 class="card-category">Daily Cases</h5>
+                    </div>
+                </div>
+            </div>
+            <div id="time_series_data" class="chart-area card-body" style="width:100%;align=center">
+                     {% autoescape on %}
+                    {{ time_series_data|safe }}
+                    {% endautoescape %}
             </div>
         </div>
     </div>
