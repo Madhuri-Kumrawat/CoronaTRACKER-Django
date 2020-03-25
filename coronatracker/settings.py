@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django_mysql',
+    'dynamic_models',
     'corona.apps.CoronaConfig',
     'django.contrib.admin',
     'django.contrib.auth',

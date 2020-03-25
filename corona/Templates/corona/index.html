@@ -5,21 +5,101 @@
 {% block body %}
 <html lang="en">
 <head>
-     <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
 </head>
 <body>
-
-   <ul>
-       {% for location in maps_data %}
-        <li>{{ location.country}}-{{ location.state}}-{{ location.total_cases}}</li>
-       {% endfor %}
-
-        <div id='myDiv' style="width:1000px;align=center">
-
-            <iframe src="{{country_wise_cases}}" height="1000" width="800"></iframe>
+<div class="row">
+    <div class="col-2">
+        <div class="card card-chart">
+            <div class="card-header ">
+                <h5 class="card-category">Total Cases</h5>
+                <h3 class="card-title "> <span class="total_confirmed_cases">{{total_confirmed.total_cases}}</span></h3>
+            </div>
         </div>
-    </ul>
+        <div class="card card-chart">
+            <div class="card-header ">
+                <h5 class="card-category">Global Effect</h5>
+            </div>
+            <div class="card-body ">
+                <div class="table-responsive">
+                    <table class="table tablesorter " id="">
+                        <tbody>
+                        {% for location in maps_data %}
+                        <tr>
+                            <td data-country="{{ location.country}}" class="country_wise_case">
+                                {{ location.country}}-{{ location.total_cases}}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card card-chart">
+            <div class="card-header ">
+                <div class="row">
+                    <div class="col-sm-6 text-left">
+                        <h5 class="card-category">World Wide Cases</h5>
+                    </div>
+                    <!-- <div class="col-sm-6">
+                      <div class="btn-group btn-group-toggle float-right" data-toggle="buttons">
+                        <label class="btn btn-sm btn-primary btn-simple active" id="0">
+                          <input type="radio" name="options" autocomplete="off" checked> Accounts
+                        </label>
+                        <label class="btn btn-sm btn-primary btn-simple " id="1">
+                          <input type="radio" name="options" autocomplete="off"> Purchases
+                        </label>
+                      </div>
+                    </div> -->
+                </div>
+            </div>
+            <div id="myDiv" class="chart-area card-body" style="width:500px;align=center">
+                     {% autoescape on %}
+                    {{ country_wise_cases|safe }}
+                    {% endautoescape %}
+            </div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="row">
+            <div class="col-6">
+                <div class="card card-chart">
+
+                    <div class="card-header ">
+                        <h5 class="card-category">Total Deaths</h5>
+                        <h3 class="card-title"><span class="total_death_cases">{{total_deaths.total_cases}}</span></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card card-chart">
+
+                    <div class="card-header ">
+                        <h5 class="card-category">Total Recovery</h5>
+                        <h3 class="card-title"><span class="total_recovered_cases">{{total_recovered.total_cases}}</span> </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card ">
+            <div class="card-header">
+                <h4 class="card-title"> Monthly Cases</h4>
+            </div>
+            <div class="card-body">
+                {% autoescape on %}
+                {{ month_wise_data|safe }}
+                {% endautoescape %}
+            </div>
+        </div>
+    </div>
+</div>
+<input type="hidden" id="csrf_token" value='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+
 </body>
 </html>
 {% endblock %}

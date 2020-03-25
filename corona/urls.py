@@ -17,10 +17,15 @@ from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include, url
 from . import  views
+from .views import change_country_data
 
 app_name = 'corona'
+
+
+
 
 urlpatterns = [
     path('', views.IndexView.as_view(),name='index'),
     url(r'^(?P<country>[\w-]+)/$',views.DetailView.as_view(),name='details'),
+    path('country_change',change_country_data,name='change_country_data'),
 ]
