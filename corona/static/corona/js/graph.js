@@ -4,7 +4,7 @@ $('td.country_wise_case').on('click',function(e){
     var country_name= $(this).data('country');
     $.ajax({
             url: '/corona/country_change',
-            data: {'country': encodeURICompnent(country_name)},
+            data: {'country': country_name},
             type: "GET",
         success: function(resp){
             $('div#myDiv').html(resp['data']);

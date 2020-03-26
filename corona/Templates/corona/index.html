@@ -14,13 +14,13 @@
     <div class="col-2">
         <div class="card card-chart">
             <div class="card-header ">
-                <h5 class="card-category">Total Cases</h5>
+                <h2 class="card-title"><b>Total Cases</b></h2>
                 <h3 class="card-title "> <span class="total_confirmed_cases">{{total_confirmed.total_cases|intcomma }}</span></h3>
             </div>
         </div>
         <div class="card card-chart">
             <div class="card-header ">
-                <h5 class="card-category">Global Effect</h5>
+                <h4 class="card-title">Global Effect</h4>
             </div>
             <div class="card-body ">
                 <div class="table-responsive" style="height:500px">
@@ -45,7 +45,7 @@
             <div class="card-header ">
                 <div class="row">
                     <div class="col-sm-6 text-left">
-                        <h5 class="card-category">World Wide Cases</h5>
+                        <h2 class="card-title"><b>World Wide Cases</b></h2>
                     </div>
                     <!-- <div class="col-sm-6">
                       <div class="btn-group btn-group-toggle float-right" data-toggle="buttons">
@@ -70,18 +70,16 @@
         <div class="row">
             <div class="col-6">
                 <div class="card card-chart">
-
                     <div class="card-header ">
-                        <h5 class="card-category">Total Deaths</h5>
+                        <h2 class="card-title"><b>Total Deaths</b></h2>
                         <h3 class="card-title"><span class="total_death_cases">{{total_deaths.total_cases|intcomma }}</span></h3>
                     </div>
                 </div>
             </div>
             <div class="col-6">
                 <div class="card card-chart">
-
                     <div class="card-header ">
-                        <h5 class="card-category">Total Recovery</h5>
+                        <h2 class="card-title"><b>Total Recovery</b></h2>
                         <h3 class="card-title"><span class="total_recovered_cases">{{total_recovered.total_cases|intcomma }}</span> </h3>
                     </div>
                 </div>
@@ -103,11 +101,7 @@
     <div class="col-md-12">
         <div class="card card-chart">
             <div class="card-header ">
-                <div class="row">
-                    <div class="col-sm-6 text-left">
-                        <h5 class="card-category">Daily Cases</h5>
-                    </div>
-                </div>
+                        <h4 class="card-title">Daily Cases</h4>
             </div>
             <div id="time_series_data" class="chart-area card-body" style="width:100%;align=center">
                      {% autoescape on %}

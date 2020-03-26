@@ -25,6 +25,7 @@ def generate_country_data(request,ajax, centre_countries):
     cities = []
     countries_taken = []
     scale = 50
+
     country_colors = {}
     maps_data = corona_data.map_data(request)
     for data in maps_data:
@@ -35,6 +36,10 @@ def generate_country_data(request,ajax, centre_countries):
             state = data.state
         country_raw_text = '{0}'.format(data.total_cases) + ' <br> ' + state + '<br> ' + (data.country)
         list_index = '';
+        scale= int(data.total_cases / 100)
+        if scale > 40:
+            scale=40
+
         list_entry = False
         if data.country in countries_taken:
             list_index = ''
@@ -50,8 +55,10 @@ def generate_country_data(request,ajax, centre_countries):
             lon=[data.lng],
             lat=[data.lat],
             text=country_raw_text,
+            hovertext=country_raw_text,
             marker=go.scattergeo.Marker(
-                size=10,
+                size=scale,
+                opacity=0.5,
                 color=country_colors[data.country],
                 line=go.scattergeo.marker.Line(
                     width=0.5, color='rgb(40,40,40)'
@@ -90,10 +97,65 @@ def generate_country_data(request,ajax, centre_countries):
     )
     if ajax == 1:
         layout.geo.center = dict(centre_countries)
+        layout.geo.projection.rotation=dict(centre_countries)
+        layout.geo.projection.scale = 4
 
     fig = go.Figure(data=cities, layout=layout)
+    fig.update_layout(legend={'itemsizing': 'constant','y':-0.005})
 
     return plotly.offline.plot(fig, filename='bubble_map', auto_open=False, output_type='div')
+
+def get_line_chart(country_param):
+    cursor = connection.cursor()
+    str=''
+    if country_param is not None:
+        str =' AND s1.country="'+country_param+'"'
+
+    query = 'SELECT DATE_FORMAT(s3.day_date, "%M, %y"),s3.total_confirmed , s3.total_death, s3.total_recovered FROM ( SELECT s1.updated_at as day_date, SUM(s1.confirmed) as total_confirmed, SUM(s1.deaths) as total_death, SUM(s1.recovered) as total_recovered  FROM corona_corona_data AS s1 JOIN corona_corona_data AS s2 ON s1.country = s2.country AND s1.state = s2.state AND s1.updated_at > s2.updated_at GROUP BY s1.updated_at ) s3 GROUP BY DATE_FORMAT(s3.day_date, "%Y-%m") HAVING MAX(s3.day_date)';
+    cursor.execute(query)
+    month_data = cursor.fetchall()
+    x_arr = []
+    y_arr = []
+    death_y_arr=[]
+    recovered_y_arr=[]
+    for ri in month_data:
+        x_arr.append(ri[0])
+        y_arr.append(ri[1])
+        death_y_arr.append(ri[2])
+        recovered_y_arr.append(ri[3])
+
+    confirmed_trace=go.Scatter(
+        x=x_arr,
+        y=y_arr,
+        marker=dict(
+            color='gold'
+        ),
+        name='Confirmed'
+    )
+    death_trace = go.Scatter(
+        x=x_arr,
+        y=death_y_arr,
+        marker=dict(
+            color='red'
+        ),
+        name='Death'
+    )
+    recovered_trace = go.Scatter(
+        x=x_arr,
+        y=recovered_y_arr,
+        marker=dict(
+            color='green'
+        ),
+        name='Recovered'
+    )
+
+    fig = go.Figure(data=[confirmed_trace,death_trace,recovered_trace])
+    fig.update_xaxes(tickfont=dict(color='white', size=14))
+    fig.update_yaxes(tickfont=dict(color='white', size=14))
+    fig.update_layout(paper_bgcolor="#222a42",
+                      plot_bgcolor="#222a42")
+    return plotly.offline.plot(fig, filename='line_map', auto_open=False, output_type='div')
+
 
 def change_country_data(request):
     centre_countries = dict()
@@ -112,10 +174,14 @@ def change_country_data(request):
     output_data_total_deaths = corona_data.total_countries_deaths(request, country_param)
     output_data_total_recovered = corona_data.total_countries_recovery(request, country_param)
 
+    ############## Generate Line Chart Country Wise #########################
+    line_chart_data=get_line_chart(country_param)
+
     return JsonResponse({'data':generate_country_data(request,1,centre_countries),
                          'total_confirmed':output_data_total_confirmed['total_cases'],
                          'total_deaths': output_data_total_deaths['total_cases'],
-                         'total_recovered': output_data_total_recovered['total_cases']
+                         'total_recovered': output_data_total_recovered['total_cases'],
+                         'line_chart_data':line_chart_data
                          }, status = 200)
 
 
@@ -136,24 +202,8 @@ class IndexView(generic.ListView):
         context['maps_data'] =corona_data.all_countries_confirmed(self,'')
 
         ################## Line Chart DAta #####################
-        cursor = connection.cursor()
-        query = 'SELECT DATE_FORMAT(s3.day_date, "%M, %y"),s3.total FROM ( SELECT s1.updated_at as day_date, SUM(s1.confirmed) as total FROM corona_corona_data AS s1 JOIN corona_corona_data AS s2 ON s1.country = s2.country AND s1.state = s2.state AND s1.updated_at > s2.updated_at GROUP BY s1.updated_at ) s3 GROUP BY DATE_FORMAT(s3.day_date, "%Y-%m") HAVING MAX(s3.day_date)';
-        cursor.execute(query)
-        context['month_data']=month_data=cursor.fetchall()
-        context['csrf_req']=csrf(request);
-        x_arr=[]
-        y_arr=[]
-        for ri in month_data:
-            x_arr.append(ri[0])
-            y_arr.append(ri[1])
 
-        fig = go.Figure(data=go.Scatter(
-                x=x_arr,
-                y=y_arr
-            ))
-        fig.update_layout(paper_bgcolor="#222a42",
-            plot_bgcolor="#222a42")
-        context['month_wise_data'] =  plotly.offline.plot(fig, filename='line_map', auto_open=False, output_type='div')
+        context['month_wise_data'] =  get_line_chart('')
 
         ######### Total deaths #################
 
@@ -161,23 +211,54 @@ class IndexView(generic.ListView):
         context['total_deaths'] = corona_data.total_countries_deaths(self, '')
         context['total_recovered'] = corona_data.total_countries_recovery(self, '')
 
-
         ############## Time Series DAta #####################
-        time_series_data=worldwide_aggregated_data.objects.only('Date','IncreaseRate','Confirmed')
+        time_series_data=worldwide_aggregated_data.objects.only('Date','IncreaseRate','Confirmed','Deaths','Recovered')
         month_arr = []
-        cases_arr = []
+        confirmed_cases_arr = []
+        deaths_cases_arr = []
+        recovered_cases_arr = []
         marker_size=[]
         for ri in time_series_data:
             month_arr.append(ri.Date)
-            cases_arr.append(ri.Confirmed)
-            marker_size.append(10)
+            confirmed_cases_arr.append(ri.Confirmed)
+            deaths_cases_arr.append(ri.Deaths)
+            recovered_cases_arr.append(ri.Recovered)
+            marker_size.append(15)
 
-        fig_time_Series = go.Figure(data=go.Scatter(
+        confirmed_trace=go.Scatter(
             x=month_arr,
-            y=cases_arr,
+            y=confirmed_cases_arr,
             mode='markers',
-            marker_size=marker_size
-        ))
+            marker_size=marker_size,
+            marker=dict(
+                color='gold'
+            ),
+            name='Confirmed'
+        )
+        death_trace = go.Scatter(
+            x=month_arr,
+            y=deaths_cases_arr,
+            mode='markers',
+            marker_size=marker_size,
+            marker=dict(
+                color='crimson'
+            ),
+            name='Death'
+        )
+        recovered_trace = go.Scatter(
+            x=month_arr,
+            y=recovered_cases_arr,
+            mode='markers',
+            marker_size=marker_size,
+            marker=dict(
+                color='green'
+            ),
+            name='Recovered'
+        )
+
+        fig_time_Series = go.Figure(data=[confirmed_trace,death_trace,recovered_trace])
+        fig_time_Series.update_xaxes(tickfont=dict(color='white', size=14))
+        fig_time_Series.update_yaxes(tickfont=dict(color='white', size=14))
         fig_time_Series.update_layout(paper_bgcolor="#222a42",
                           plot_bgcolor="#222a42")
         context['time_series_data'] = plotly.offline.plot(fig_time_Series, filename='time_Series_map', auto_open=False, output_type='div')
