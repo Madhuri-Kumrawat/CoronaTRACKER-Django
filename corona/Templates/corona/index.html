@@ -4,6 +4,7 @@
 
 {% block body %}
 {% load humanize %}
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -112,7 +113,7 @@
     </div>
 </div>
 <input type="hidden" id="csrf_token" value='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
-
+<div class="modal"><!-- Place at bottom of page --></div>
 </body>
 </html>
 {% endblock %}

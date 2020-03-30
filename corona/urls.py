@@ -21,11 +21,7 @@ from .views import change_country_data
 
 app_name = 'corona'
 
-
-
-
 urlpatterns = [
     path('', views.IndexView.as_view(),name='index'),
-    url(r'^(?P<country>[\w-]+)/$',views.DetailView.as_view(),name='details'),
-    path('country_change',change_country_data,name='change_country_data'),
+    path('country_change',change_country_data,name='change_country_data')
 ]

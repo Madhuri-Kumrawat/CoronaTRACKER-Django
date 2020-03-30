@@ -1,5 +1,10 @@
 $(function(){
+$body = $("body");
 
+$(document).on({
+    ajaxStart: function() { $body.addClass("loading");    },
+     ajaxStop: function() { $body.removeClass("loading"); }
+});
 $('td.country_wise_case').on('click',function(e){
     var country_name= $(this).data('country');
     $.ajax({

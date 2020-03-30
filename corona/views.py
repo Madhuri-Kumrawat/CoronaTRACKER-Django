@@ -13,16 +13,16 @@ import chart_studio
 import chart_studio.plotly as py
 import plotly.express as px
 import random
-
+g_layout=go.layout
+g_figure=go.Figure
+cities = []
 from django.shortcuts import get_object_or_404
 
 # Create your views here.
 def generate_country_data(request,ajax, centre_countries):
-    geo_layout= go.layout.Geo()
-
     limits = [(0, 2), (3, 10), (11, 20), (21, 50), (50, 3000)]
     colors = ["rgb(0,116,217)", "rgb(255,65,54)", "rgb(133,20,75)", "rgb(255,133,27)", "red"]
-    cities = []
+
     countries_taken = []
     scale = 50
 
@@ -32,6 +32,8 @@ def generate_country_data(request,ajax, centre_countries):
         state = ''
         if data.state is None:
             state = ''
+        elif data.state=='NULL':
+            state=''
         else:
             state = data.state
         country_raw_text = '{0}'.format(data.total_cases) + ' <br> ' + state + '<br> ' + (data.country)
@@ -70,7 +72,7 @@ def generate_country_data(request,ajax, centre_countries):
         )
         cities.append(city)
 
-    layout = go.Layout(
+    g_layout = go.Layout(
         title=go.layout.Title(
             text='Corona Effect'
         ),
@@ -96,23 +98,22 @@ def generate_country_data(request,ajax, centre_countries):
         margin={"r": 0, "t": 0, "l": 0, "b": 0}
     )
     if ajax == 1:
-        layout.geo.center = dict(centre_countries)
-        layout.geo.projection.rotation=dict(centre_countries)
-        layout.geo.projection.scale = 4
+        g_layout.geo.center = dict(centre_countries)
+        g_layout.geo.projection.rotation=dict(centre_countries)
+        g_layout.geo.projection.scale = 4
 
-    fig = go.Figure(data=cities, layout=layout)
-    fig.update_layout(legend={'itemsizing': 'constant','y':-0.005})
+    g_figure = go.Figure(data=cities, layout=g_layout)
+    g_figure.update_layout(legend={'itemsizing': 'constant','y':-0.005,
+                              'font':{'color':'white'}})
 
-    return plotly.offline.plot(fig, filename='bubble_map', auto_open=False, output_type='div')
+    return plotly.offline.plot(g_figure, filename='bubble_map', auto_open=False, output_type='div')
 
 def get_line_chart(country_param):
     cursor = connection.cursor()
-    str=''
-    if country_param is not None:
-        str =' AND s1.country="'+country_param+'"'
 
     query = 'SELECT DATE_FORMAT(s3.day_date, "%M, %y"),s3.total_confirmed , s3.total_death, s3.total_recovered FROM ( SELECT s1.updated_at as day_date, SUM(s1.confirmed) as total_confirmed, SUM(s1.deaths) as total_death, SUM(s1.recovered) as total_recovered  FROM corona_corona_data AS s1 JOIN corona_corona_data AS s2 ON s1.country = s2.country AND s1.state = s2.state AND s1.updated_at > s2.updated_at GROUP BY s1.updated_at ) s3 GROUP BY DATE_FORMAT(s3.day_date, "%Y-%m") HAVING MAX(s3.day_date)';
     cursor.execute(query)
+
     month_data = cursor.fetchall()
     x_arr = []
     y_arr = []
@@ -153,7 +154,9 @@ def get_line_chart(country_param):
     fig.update_xaxes(tickfont=dict(color='white', size=14))
     fig.update_yaxes(tickfont=dict(color='white', size=14))
     fig.update_layout(paper_bgcolor="#222a42",
-                      plot_bgcolor="#222a42")
+                      plot_bgcolor="#222a42",
+                      legend={'font': {'color': 'white'}}
+                      )
     return plotly.offline.plot(fig, filename='line_map', auto_open=False, output_type='div')
 
 
@@ -175,13 +178,10 @@ def change_country_data(request):
     output_data_total_recovered = corona_data.total_countries_recovery(request, country_param)
 
     ############## Generate Line Chart Country Wise #########################
-    line_chart_data=get_line_chart(country_param)
-
     return JsonResponse({'data':generate_country_data(request,1,centre_countries),
                          'total_confirmed':output_data_total_confirmed['total_cases'],
                          'total_deaths': output_data_total_deaths['total_cases'],
-                         'total_recovered': output_data_total_recovered['total_cases'],
-                         'line_chart_data':line_chart_data
+                         'total_recovered': output_data_total_recovered['total_cases']
                          }, status = 200)
 
 
@@ -260,17 +260,7 @@ class IndexView(generic.ListView):
         fig_time_Series.update_xaxes(tickfont=dict(color='white', size=14))
         fig_time_Series.update_yaxes(tickfont=dict(color='white', size=14))
         fig_time_Series.update_layout(paper_bgcolor="#222a42",
-                          plot_bgcolor="#222a42")
+                          plot_bgcolor="#222a42",legend={'font': {'color': 'white'}})
         context['time_series_data'] = plotly.offline.plot(fig_time_Series, filename='time_Series_map', auto_open=False, output_type='div')
 
         return context
-
-
-class DetailView(generic.DetailView):
-    template_name = 'corona/detail.html'
-    context_object_name='country_detail'
-
-    def get_object(self):
-        object = corona_data.objects.filter(country=self.kwargs['country']).first()
-        return object
-
